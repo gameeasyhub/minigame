@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Парадокс Монти Холла - Честная Игра</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #eee;
+            --accent-color: #ffd700;
+            --door-color: #8b4513;
+            --door-border: #5d2e0a;
+            --pixel-size: 4px;
+        }
+
+        * {
+            box-sizing: border-box;
+            image-rendering: pixelated;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', cursive;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 10px;
+        }
+
+        /* Layout */
+        #game-section {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-bottom: var(--pixel-size) solid #444;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        #stats-section {
+            flex: 2;
+            padding: 20px;
+            background-color: #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Game Elements */
+        #message {
+            text-align: center;
+            line-height: 1.5;
+            height: 3em;
+            margin: 0;
+        }
+
+        .doors-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .door-wrapper {
+            position: relative;
+        }
+
+        .door {
+            width: 80px;
+            height: 120px;
+            background-color: var(--door-color);
+            border: var(--pixel-size) solid var(--door-border);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s, border-color 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .door:hover:not(.disabled) {
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+        }
+
+        .door.selected {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .door.opened {
+            background-color: #333;
+            border-color: #111;
+            cursor: default;
+        }
+
+        .door.disabled {
+            cursor: default;
+        }
+
+        .door-content {
+            font-size: 40px;
+            display: none;
+        }
+
+        .door.opened .door-content {
+            display: block;
+        }
+
+        .door-number {
+            position: absolute;
+            top: 10px;
+            font-size: 14px;
+            color: var(--door-border);
+        }
+
+        .door.opened .door-number {
+            display: none;
+        }
+
+        /* Stats & Buttons */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 10px;
+        }
+
+        .stat-box {
+            border: var(--pixel-size) solid #444;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            color: var(--accent-color);
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #444;
+            color: white;
+            border: var(--pixel-size) solid #666;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 10px;
+        }
+
+        button:hover {
+            background-color: #555;
+            border-color: #888;
+        }
+
+        button:active {
+            transform: translateY(2px);
+        }
+
+        #controls {
+            margin-top: 30px;
+        }
+
+        /* Fairness Section */
+        #fairness-panel {
+            margin-bottom: 10px;
+            font-size: 8px;
+            color: #888;
+            text-align: center;
+        }
+
+        .copy-btn {
+            font-size: 8px;
+            padding: 5px 10px;
+            background-color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-section">
+        <div id="fairness-panel">
+            <button class="copy-btn" onclick="copySecret()">Скопировать секрет в буфер (для проверки в конце)</button>
+        </div>
+
+        <div id="message">Выберите дверь!</div>
+
+        <div class="doors-container">
+            <div class="door-wrapper">
+                <div id="door-0" class="door" onclick="handleDoorClick(0)">
+                    <span class="door-number">1</span>
+                    <span class="door-content">?</span>
+                </div>
+            </div>
+            <div class="door-wrapper">
+                <div id="door-1" class="door" onclick="handleDoorClick(1)">
+                    <span class="door-number">2</span>
+                    <span class="door-content">?</span>
+                </div>
+            </div>
+            <div class="door-wrapper">
+                <div id="door-2" class="door" onclick="handleDoorClick(2)">
+                    <span class="door-number">3</span>
+                    <span class="door-content">?</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="controls" class="hidden">
+            <button id="stay-btn" onclick="finishGame(false)">Остаться</button>
+            <button id="switch-btn" onclick="finishGame(true)">Сменить</button>
+        </div>
+
+        <div id="restart-container" class="hidden">
+            <button onclick="initGame()">Сыграть еще раз</button>
+        </div>
+    </div>
+
+    <div id="stats-section">
+        <div>СТАТИСТИКА</div>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div>СТРАТЕГИЯ: "ОСТАТЬСЯ"</div>
+                <div id="stay-stats" class="stat-value">Побед: 0 / 0 (0%)</div>
+            </div>
+            <div class="stat-box">
+                <div>СТРАТЕГИЯ: "СМЕНИТЬ"</div>
+                <div id="switch-stats" class="stat-value">Побед: 0 / 0 (0%)</div>
+            </div>
+        </div>
+
+        <div id="verification-result" class="hidden" style="margin-top: 20px; font-size: 8px; text-align: center;">
+            <div style="color: var(--accent-color); margin-bottom: 5px;">ПРОВЕРКА ЧЕСТНОСТИ:</div>
+            <div>В буфере было: <span id="reveal-secret" style="color: #fff; user-select: all;"></span></div>
+            <div style="margin-top: 10px; color: #888;">Сравните это со значением из буфера!</div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let carDoor = -1;
+        let selectedDoor = -1;
+        let openedGoatDoor = -1;
+        let currentSecret = "";
+        let isGameOver = false;
+        let gameState = 'SELECTING'; // SELECTING, DECIDING, RESULT
+
+        // Statistics
+        const stats = {
+            stay: { wins: 0, total: 0 },
+            switch: { wins: 0, total: 0 }
+        };
+
+        function initGame() {
+            carDoor = Math.floor(Math.random() * 3);
+            // Теперь просто номер двери, как вы и просили
+            currentSecret = `ДВЕРЬ №${carDoor + 1}`;
+            
+            document.getElementById('message').textContent = "Выберите дверь!";
+            document.getElementById('controls').classList.add('hidden');
+            document.getElementById('restart-container').classList.add('hidden');
+            document.getElementById('verification-result').classList.add('hidden');
+            
+            selectedDoor = -1;
+            openedGoatDoor = -1;
+            isGameOver = false;
+            gameState = 'SELECTING';
+
+            for (let i = 0; i < 3; i++) {
+                const door = document.getElementById(`door-${i}`);
+                door.className = 'door';
+                door.querySelector('.door-content').textContent = '?';
+            }
+        }
+
+        function handleDoorClick(index) {
+            if (gameState !== 'SELECTING') return;
+
+            selectedDoor = index;
+            gameState = 'DECIDING';
+            
+            const options = [0, 1, 2].filter(i => i !== carDoor && i !== selectedDoor);
+            openedGoatDoor = options[Math.floor(Math.random() * options.length)];
+
+            document.querySelectorAll('.door').forEach(d => d.classList.add('disabled'));
+            document.getElementById(`door-${selectedDoor}`).classList.add('selected');
+            document.getElementById(`door-${selectedDoor}`).classList.remove('disabled');
+            
+            setTimeout(() => {
+                const goatDoor = document.getElementById(`door-${openedGoatDoor}`);
+                goatDoor.classList.add('opened');
+                goatDoor.querySelector('.door-content').textContent = '🐐';
+                
+                document.getElementById('message').textContent = `За дверью ${openedGoatDoor + 1} коза! Смените выбор?`;
+                document.getElementById('controls').classList.remove('hidden');
+            }, 500);
+        }
+
+        function finishGame(didSwitch) {
+            if (gameState !== 'DECIDING') return;
+
+            const finalDoor = didSwitch 
+                ? [0, 1, 2].find(i => i !== selectedDoor && i !== openedGoatDoor)
+                : selectedDoor;
+
+            const won = finalDoor === carDoor;
+            
+            if (didSwitch) {
+                stats.switch.total++;
+                if (won) stats.switch.wins++;
+            } else {
+                stats.stay.total++;
+                if (won) stats.stay.wins++;
+            }
+
+            gameState = 'RESULT';
+            updateStatsUI();
+
+            for (let i = 0; i < 3; i++) {
+                const door = document.getElementById(`door-${i}`);
+                door.classList.add('opened');
+                door.classList.remove('selected');
+                door.querySelector('.door-content').textContent = (i === carDoor) ? '🚗' : '🐐';
+                if (i === finalDoor) door.classList.add('selected');
+            }
+
+            document.getElementById('message').textContent = won ? "ВЫ ВЫИГРАЛИ МАШИНУ!" : "Эх, попалась коза...";
+            document.getElementById('controls').classList.add('hidden');
+            document.getElementById('restart-container').classList.remove('hidden');
+
+            document.getElementById('reveal-secret').textContent = currentSecret;
+            document.getElementById('verification-result').classList.remove('hidden');
+        }
+
+        function updateStatsUI() {
+            const stayPercent = stats.stay.total ? Math.round((stats.stay.wins / stats.stay.total) * 100) : 0;
+            const switchPercent = stats.switch.total ? Math.round((stats.switch.wins / stats.switch.total) * 100) : 0;
+
+            document.getElementById('stay-stats').textContent = `Побед: ${stats.stay.wins} / ${stats.stay.total} (${stayPercent}%)`;
+            document.getElementById('switch-stats').textContent = `Побед: ${stats.switch.wins} / ${stats.switch.total} (${switchPercent}%)`;
+        }
+
+        function copySecret() {
+            navigator.clipboard.writeText(currentSecret).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = "СКОПИРОВАНО!";
+                setTimeout(() => btn.textContent = originalText, 2000);
+            });
+        }
+
+        initGame();
+    </script>
+</body>
+</html>

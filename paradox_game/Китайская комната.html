@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Китайская Комната | mitAI Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #000; color: #fff;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; font-family: 'Press Start 2P', cursive;
+        }
+        #game-container {
+            width: 100vw; height: 100vh;
+            max-width: 56.25vh; /* 9:16 ratio */
+            max-height: 177.77vw;
+            background: radial-gradient(circle, #001a1a 0%, #000 100%);
+            position: relative; border: 4px solid #00ffff;
+            box-sizing: border-box; display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .btn-group {
+            position: absolute; bottom: 8%; width: 100%;
+            display: flex; justify-content: space-around; padding: 0 10px;
+            box-sizing: border-box; z-index: 20;
+        }
+        .symbol-btn {
+            width: 75px; height: 75px;
+            font-size: 24px; background: rgba(0,0,0,0.8);
+            border: 4px solid #00ffff; color: #00ffff;
+            cursor: pointer; font-family: 'Press Start 2P', cursive;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.1s;
+        }
+        .symbol-btn:active { background: #00ffff; color: #000; }
+        
+        #manual {
+            position: absolute; top: 5%; left: 50%; transform: translateX(-50%);
+            width: 90%; background: rgba(0, 255, 255, 0.1);
+            border: 4px dashed #00ffff; padding: 15px;
+            color: #00ffff; text-align: center; pointer-events: none;
+            z-index: 100; box-sizing: border-box;
+        }
+        .manual-title { font-size: 14px; margin-bottom: 15px; color: #ffd700; display: block; }
+        .manual-row { font-size: 40px; margin-top: 15px; display: block; white-space: nowrap; letter-spacing: 5px; }
+        
+        #timer-container {
+            position: absolute; top: 32%; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 8px; border: 1px solid #00ffff;
+            background: rgba(0,0,0,0.5); z-index: 40;
+        }
+        #timer-bar {
+            width: 100%; height: 100%; background: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff; transform-origin: left;
+        }
+
+        .status-text { fill: #00ffff; font-size: 24px; text-anchor: middle; }
+        .instruction-text { fill: #ffd700; font-size: 14px; text-anchor: middle; }
+        
+        #start-overlay, #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 150; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        #start-overlay { z-index: 140; background: rgba(0,0,0,0.7); }
+        
+        .glitch { filter: url(#glitch-filter); }
+        
+        @media (max-width: 400px) {
+            .manual-row { font-size: 28px; }
+            .symbol-btn { width: 60px; height: 60px; font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="manual">
+            <span class="manual-title">ИНСТРУКЦИЯ ПО ОБРАБОТКЕ:</span>
+            <span class="manual-row">🉐&rarr;🟦 | ㊗️&rarr;🔺</span>
+            <span class="manual-row">㊙️&rarr;🟡 | 🈵&rarr;🟩</span>
+        </div>
+
+        <div id="timer-container">
+            <div id="timer-bar"></div>
+        </div>
+
+        <div id="start-overlay">
+            <button class="symbol-btn" style="width: auto; padding: 0 40px; font-size: 24px; height: 80px;" onclick="startGame()">НАЧАТЬ</button>
+        </div>
+
+        <svg viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <filter id="glitch-filter">
+                    <feFlood flood-color="cyan" result="flood1" />
+                    <feFlood flood-color="magenta" result="flood2" />
+                    <feOffset in="SourceGraphic" dx="3" dy="0" result="off1" />
+                    <feOffset in="SourceGraphic" dx="-3" dy="0" result="off2" />
+                </filter>
+            </defs>
+
+            <!-- Move content lower to make room for timer -->
+            <rect x="290" y="750" width="500" height="300" fill="#111" stroke="#00ffff" stroke-width="5" />
+            <text id="incoming-symbol" x="540" y="960" font-size="200" text-anchor="middle" fill="#fff">?</text>
+            
+            <text x="540" y="720" class="instruction-text">ВХОДЯЩИЙ СИГНАЛ</text>
+            <text x="540" y="1150" class="instruction-text">ОБРАБОТКА...</text>
+            <text x="540" y="1400" class="status-text" id="score-text">ОБРАБОТАНО: 0</text>
+        </svg>
+
+        <div class="btn-group">
+            <button class="symbol-btn" onclick="check('blue')">🟦</button>
+            <button class="symbol-btn" onclick="check('triangle')">🔺</button>
+            <button class="symbol-btn" onclick="check('circle')">🟡</button>
+            <button class="symbol-btn" onclick="check('square')">🟩</button>
+        </div>
+
+        <div id="overlay" style="display: none;">
+            <h2 id="result-title" style="color: #ff00ff; margin-bottom: 20px; font-size: 18px;">СИСТЕМА ОСТАНОВЛЕНА</h2>
+            <p id="result-desc" style="font-size: 14px; line-height: 1.6; margin-bottom: 30px;"></p>
+            <button class="symbol-btn" style="width: auto; padding: 0 20px; font-size: 16px; height: 50px;" onclick="location.reload()">RESTART</button>
+        </div>
+    </div>
+
+    <script>
+        const symbols = [
+            { char: '🉐', key: 'blue' },
+            { char: '㊗️', key: 'triangle' },
+            { char: '㊙️', key: 'circle' },
+            { char: '🈵', key: 'square' }
+        ];
+
+        let currentSymbol = null;
+        let score = 0;
+        let gameActive = false;
+        let initialTime = 4000;
+        let timePerSymbol = initialTime;
+        let timer = null;
+        let timerAnim = null;
+
+        const display = document.getElementById('incoming-symbol');
+        const scoreDisplay = document.getElementById('score-text');
+        const overlay = document.getElementById('overlay');
+        const startOverlay = document.getElementById('start-overlay');
+        const resTitle = document.getElementById('result-title');
+        const resDesc = document.getElementById('result-desc');
+        const timerBar = document.getElementById('timer-bar');
+
+        function startGame() {
+            startOverlay.style.display = 'none';
+            gameActive = true;
+            next();
+        }
+
+        function next() {
+            if (!gameActive) return;
+            
+            currentSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            display.textContent = currentSymbol.char;
+            
+            gsap.fromTo(display, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out" });
+
+            if (timerAnim) timerAnim.kill();
+            gsap.set(timerBar, { scaleX: 1 });
+            timerAnim = gsap.to(timerBar, { scaleX: 0, duration: timePerSymbol / 1000, ease: "none" });
+
+            clearTimeout(timer);
+            timer = setTimeout(() => gameOver("ВРЕМЯ ИСТЕКЛО"), timePerSymbol);
+        }
+
+        function check(key) {
+            if (!gameActive) return;
+
+            if (key === currentSymbol.key) {
+                score++;
+                scoreDisplay.textContent = `ОБРАБОТАНО: ${score}`;
+                timePerSymbol = Math.max(800, initialTime - (score * 100));
+                
+                gsap.to(display, { color: "#00ff00", duration: 0.1, yoyo: true, repeat: 1 });
+                next();
+            } else {
+                gameOver("ТЕСТ ТЬЮРИНГА ПРОВАЛЕН");
+            }
+        }
+
+        function gameOver(reason) {
+            gameActive = false;
+            clearTimeout(timer);
+            if (timerAnim) timerAnim.kill();
+            
+            overlay.style.display = 'flex';
+            resTitle.textContent = reason;
+            
+            resDesc.textContent = score > 0 ? 
+                `Вы идеально обработали ${score} запросов на языке, который не знаете. Снаружи все уверены, что вы разумны. Но вы-то знаете правду...` :
+                "Вы не следовали инструкциям. Тест провален.";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameEasyHub – Мини‑игры</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080b10;
+      --card-bg: rgba(22, 27, 34, 0.5);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-primary: #58a6ff;
+      --accent-gradient: linear-gradient(135deg, #a855f7, #6366f1, #38bdf8);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent 50%),
+        radial-gradient(circle at 10% 80%, rgba(168, 85, 247, 0.1), transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+
+    /* Стилизация скроллбара */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Шапка сайта */
+    header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .logo {
+      font-size: clamp(2.5rem, 6vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Категории и Сетка */
+    .category-section {
+      margin-bottom: 4rem;
+    }
+
+    .category-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .category-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent);
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    /* Карточка игры */
+    .game-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(168, 85, 247, 0.4);
+      box-shadow: 0 12px 30px -10px rgba(168, 85, 247, 0.3);
+    }
+
+    .game-card a {
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .image-container {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+      background: #101520;
+    }
+
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .game-card:hover .image-container img {
+      transform: scale(1.05);
+    }
+
+    /* Ярлык на картинке */
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(8, 11, 16, 0.75);
+      backdrop-filter: blur(4px);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #a855f7;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+      transition: var(--transition);
+    }
+
+    .game-card:hover .card-title {
+      color: #38bdf8;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      flex-grow: 1;
+    }
+
+    .play-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+
+    .play-label svg {
+      transition: var(--transition);
+    }
+
+    .game-card:hover .play-label svg {
+      transform: translateX(4px);
+    }
+
+    /* Социальные сети */
+    .social-section {
+      text-align: center;
+      margin-top: auto;
+      padding-top: 4rem;
+    }
+
+    .social-section p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      padding: 0.6rem 1.2rem;
+      border-radius: 30px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .social-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* Индивидуальные стили при наведении на соц. сети */
+    .social-btn.tg-paradox:hover {
+      background: rgba(34, 158, 217, 0.15);
+      border-color: #229ED9;
+      color: #229ED9;
+    }
+    .social-btn.tg-blog:hover {
+      background: rgba(0, 136, 204, 0.15);
+      border-color: #0088cc;
+      color: #0088cc;
+    }
+    .social-btn.yt:hover {
+      background: rgba(255, 0, 0, 0.15);
+      border-color: #ff0000;
+      color: #ff0000;
+    }
+    .social-btn.vk:hover {
+      background: rgba(7, 102, 237, 0.15);
+      border-color: #0766ed;
+      color: #0766ed;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1.5rem 0.75rem;
+      }
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 class="logo">GameEasyHub</h1>
+      <p class="subtitle">Интерактивная коллекция мысленных экспериментов и мини-игр. Погрузитесь в решение увлекательных парадоксов науки и философии.</p>
+    </header>
+
+    <main>
+      <section class="category-section">
+        <h2 class="category-title">Философские парадоксы</h2>
+        
+        <div class="games-grid">
+          <!-- Карточка 1 -->
+          <div class="game-card">
+            <a href="paradox_game/Китайская комната.html" target="_blank">
+              <div class="image-container">
+                <span class="badge">Сознание</span>
+                <img src="img/chinese_room.png" alt="Китайская комната">
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">Китайская комната</h3>
+                <p class="card-desc">Способен ли компьютер мыслить по-настоящему, или он лишь имитирует понимание символов?</p>
+                <span class="play-label">
+                  Исследовать
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </a>
+          </div>
+
+          <!-- Карточка 2 -->
+          <div class="game-card">
+            <a href="paradox_game/Кот Шредингера.html" target="_blank">
+              <div class="image-container">
+                <span class="badge">Квантовая физика</span>
+                <img src="img/schrodinger_cat.png" alt="Кот Шредингера">
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">Кот Шредингера</h3>
+                <p class="card-desc">Загляните в коробку и узнайте, жив ли знаменитый кот, зависший в состоянии квантовой суперпозиции.</p>
+                <span class="play-label">
+                  Запустить тест
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </a>
+          </div>
+
+          <!-- Карточка 3 -->
+          <div class="game-card">
+            <a href="paradox_game/Монти Холл.html" target="_blank">
+              <div class="image-container">
+                <span class="badge">Теория вероятностей</span>
+                <img src="img/monty_hall.png" alt="Монти Холл">
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">Монти Холл</h3>
+                <p class="card-desc">Попробуйте угадать, за какой из трех дверей скрывается главный приз, перехитрив саму математику.</p>
+                <span class="play-label">
+                  Испытать удачу
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="social-section">
+      <p>Оставайтесь на связи и следите за новыми выпусками</p>
+      <div class="social-links">
+        <a href="https://t.me/mitAI_official" target="_blank" class="social-btn tg-paradox">
+          <!-- Иконка Telegram -->
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.46-.42-1.4-.88.03-.24.38-.49 1.04-.74 4.07-1.77 6.79-2.94 8.16-3.5 3.89-1.61 4.7-1.89 5.23-1.9.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.19-.02.26z"/></svg>
+          Telegram (рабочий)
+        </a>
+        <a href="https://t.me/lingvoaichanel" target="_blank" class="social-btn tg-blog">
+          <!-- Иконка Telegram -->
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.46-.42-1.4-.88.03-.24.38-.49 1.04-.74 4.07-1.77 6.79-2.94 8.16-3.5 3.89-1.61 4.7-1.89 5.23-1.9.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.19-.02.26z"/></svg>
+          Telegram (личный)
+        </a>
+        <a href="https://www.youtube.com/@mitAI_official" target="_blank" class="social-btn yt">
+          <!-- Иконка YouTube -->
+          <svg viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.516 0-9.387.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.387.507 9.387.507s7.517 0 9.387-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YouTube
+        </a>
+        <a href="https://vk.com/mitai_official" target="_blank" class="social-btn vk">
+          <!-- Иконка VK -->
+          <svg viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10 10-4.48 10-10zm-3.66 3.16c.15.28.15.52 0 .76-.15.2-.5.36-1.02.36h-1.63c-.47 0-.87-.14-1.08-.41-.45-.55-.99-1.32-1.34-1.32-.15 0-.29.07-.37.21-.13.25-.13.68-.13.97v.29c0 .4-.14.54-.83.54h-.78c-1.68 0-3.15-.99-4.14-2.48-1.49-2.22-2.11-4.72-2.11-4.99 0-.23.09-.44.49-.44h1.64c.36 0 .49.16.58.4.3.73.81 1.93 1.41 2.45.18.16.36.27.53.27.1 0 .19-.03.26-.1.2-.21.2-1.12.2-1.54v-.83c0-.62-.18-.89-.73-.89-.28 0-.36-.05-.24-.26.2-.35.68-.58 1.25-.58h.98c.52 0 .66.27.66.75v1.65c0 .18 0 .39.06.51.13.25.43.32.55.21.36-.32.84-1.49 1.15-2.25.13-.3.35-.43.72-.43h1.64c.48 0 .58.24.48.57-.2.62-.97 2.06-1.55 2.76-.17.21-.22.35-.04.53.13.13.57.56.87.9.56.63 1 .13 1.34.63z"/></svg>
+          VK
+        </a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
