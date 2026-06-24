@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Парадокс Монти Холла - Честная Игра</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Подключение шрифтов: Press Start 2P для ретро-стиля игры и Inter для кнопки хаба -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -169,7 +170,7 @@
             margin-top: 30px;
         }
 
-        /* Fairness Section */
+        /* Fairness Panel */
         #fairness-panel {
             margin-bottom: 10px;
             font-size: 8px;
@@ -186,9 +187,68 @@
         .hidden {
             display: none;
         }
+
+        /* Полностью изолированные стили кнопки назад (как в Стеке) */
+        .back-btn {
+            all: unset !important;
+            box-sizing: border-box !important;
+            position: absolute !important;
+            top: 20px !important;
+            left: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            background: rgba(22, 27, 34, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            padding: 10px 20px !important;
+            border-radius: 30px !important;
+            color: #f0f6fc !important;
+            text-decoration: none !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            font-size: 14.4px !important;
+            font-weight: 500 !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            z-index: 99999 !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+        }
+
+        .back-btn:hover {
+            border-color: rgba(168, 85, 247, 0.5) !important;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.2) !important;
+            transform: translateX(-3px) !important;
+            color: #ffffff !important;
+        }
+
+        .back-btn svg {
+            all: unset !important;
+            box-sizing: border-box !important;
+            width: 18px !important;
+            height: 18px !important;
+            stroke: currentColor !important;
+            fill: none !important;
+            stroke-width: 2.5 !important;
+            stroke-linecap: round !important;
+            stroke-linejoin: round !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            flex-shrink: 0 !important;
+            display: block !important;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Кнопка возврата в хаб -->
+    <a href="../index.html" class="back-btn">
+        <svg viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        В меню хаба
+    </a>
 
     <div id="game-section">
         <div id="fairness-panel">
@@ -265,7 +325,6 @@
 
         function initGame() {
             carDoor = Math.floor(Math.random() * 3);
-            // Теперь просто номер двери, как вы и просили
             currentSecret = `ДВЕРЬ №${carDoor + 1}`;
             
             document.getElementById('message').textContent = "Выберите дверь!";
